@@ -11,7 +11,7 @@
 
 #if [ ! $# -eq 3 ]; then # if 4 CL arguments not passed then return err msg
 if [ "x$1" == "x" -o "x$2" == "x" -o "x$3" == "x" ]; then
-  echo "Usage: $0 filepath gcp-project-id bucketname"
+  echo "Usage: $0 filepath gcp-project-id bucketname lmp(lifecycle management on -optional)"
 
   exit
 fi
