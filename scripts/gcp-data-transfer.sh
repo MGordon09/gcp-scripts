@@ -9,8 +9,8 @@
 # Return Help Message on Error
 # ------------------------------------------------------------------------------
 
-if [ ! $# -eq 3 ]; then # if 4 CL arguments not passed then return err msg
-#if [ "x$1" == "x" -o "x$2" == "x" -o "x$3" == "x" ]; then
+#if [ ! $# -eq 3 ]; then # if 4 CL arguments not passed then return err msg
+if [ "x$1" == "x" -o "x$2" == "x" -o "x$3" == "x" ]; then
   echo "Usage: $0 filepath gcp-project-id bucketname"
 
   exit
@@ -20,11 +20,13 @@ fi
 # Define Variables
 # ------------------------------------------------------------------------------
 
+datelab=$(date +'%d-%m-%y') #dd-mm-yy
 path="$PATH":/opt/google-cloud-sdk/bin/ #add gcloud tools to path
 
 filepath=$1 #path to files
 gcpproject=$2 #gcp project id
 bucketname=$3 #name of bucket to move data to (or create if absent)
+lifecycle=$4 # enable labelling & lifecycle managemeent policy 
 
 # ------------------------------------------------------------------------------
 # Set Project
@@ -34,7 +36,7 @@ bucketname=$3 #name of bucket to move data to (or create if absent)
 gcloud config set project $gcpproject
 
 # ------------------------------------------------------------------------------
-# Create bucket; First Check If Exists
+# Create bucket & labels; First Check If Exists
 # ------------------------------------------------------------------------------
 
 # Parameters:
@@ -47,13 +49,20 @@ gcloud config set project $gcpproject
 echo "Checking bucket..."
 gsutil ls -b gs://$bucketname || gsutil mb -b "on" -l "europe-west2" -c "Standard" --pap "enforced" -p $gcpproject gs://$bucketname
 
+echo "Adding labels.."
+gsutil label ch -l project-id:$gcpproject -l creation-date:$datelab gs://$bucketname
 
 # ------------------------------------------------------------------------------
-# Set bucket lifecycle management policy
+# Set Bucket Lifecycle Management Policy & Labelling: Optional
+# LMP: live storage 3 months -> coldline storage -> 3 years -> archive 12 years
 # ------------------------------------------------------------------------------
 
-# TBD
-
+if [[ x$4 == x-l ]]; then #lifecycle if -l flag given
+	echo "Setting lifecycle policy"
+	
+echo	gsutil lifecycle set ../docs/nibsc-bucket-lifecycle-policy.json gs://$bucketname
+else
+	echo "Skipping lifecycle policy"
 
 # ------------------------------------------------------------------------------
 # Copy data to bucket

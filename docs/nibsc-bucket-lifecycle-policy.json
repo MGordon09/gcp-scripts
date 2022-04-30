@@ -22,10 +22,5 @@
         }
       }
     ]
-    },
-    "labels": {
-      "sequencer": "SETSEQUENCER",
-      "date":"SETDATE",
-      "creator":"SETCREATOR"
     }
 }
