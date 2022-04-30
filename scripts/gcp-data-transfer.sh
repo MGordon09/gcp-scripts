@@ -49,7 +49,7 @@ gcloud config set project $gcpproject
 echo "Checking bucket..."
 gsutil ls -b gs://$bucketname || gsutil mb -b "on" -l "europe-west2" -c "Standard" --pap "enforced" -p $gcpproject gs://$bucketname
 
-echo "Adding labels.."
+# Adding labels
 gsutil label ch -l project-id:$gcpproject -l creation-date:$datelab gs://$bucketname
 
 # ------------------------------------------------------------------------------
@@ -57,12 +57,13 @@ gsutil label ch -l project-id:$gcpproject -l creation-date:$datelab gs://$bucket
 # LMP: live storage 3 months -> coldline storage -> 3 years -> archive 12 years
 # ------------------------------------------------------------------------------
 
-if [[ x$4 == x-l ]]; then #lifecycle if -l flag given
+if [[ x$4 == xlmp ]]; then #lifecycle policy implemented if 'lmp' flag given
 	echo "Setting lifecycle policy"
 	
-echo	gsutil lifecycle set ../docs/nibsc-bucket-lifecycle-policy.json gs://$bucketname
+	gsutil lifecycle set ../docs/nibsc-bucket-lifecycle-policy.json gs://$bucketname
 else
 	echo "Skipping lifecycle policy"
+fi
 
 # ------------------------------------------------------------------------------
 # Copy data to bucket
