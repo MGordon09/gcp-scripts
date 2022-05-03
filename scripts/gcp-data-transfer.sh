@@ -21,7 +21,7 @@ fi
 # ------------------------------------------------------------------------------
 
 datelab=$(date +'%d-%m-%y') #dd-mm-yy
-path="$PATH":/opt/google-cloud-sdk/bin/ #add gcloud tools to path
+export PATH="$PATH:/opt/google-cloud-sdk/bin" #add gcloud sdk to path
 
 filepath=$1 #path to files
 gcpproject=$2 #gcp project id
@@ -96,11 +96,4 @@ fi
 
 echo "Done copying files!"
 
-# maybe implement some kind of error checking.. possibly loop for this
-
-#if [ $? -ne 0 ]
-         #then
-         #       echo "error for sample..retry upload"
-         #       cat $filepath |  echo gsutil cp -I gs://${bucketname}
-         #fi
 
