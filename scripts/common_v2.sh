@@ -93,7 +93,6 @@ case "$type" in #type var must be one of M,N,N2,O
   ;;
 esac #required to end a case statement
 
-dirLog="$dirLocal/log"
+# TODO: create folder for log files on hpc
 dirProcessed="$dirLocal/processed/$shortName" #this is the date folder
 dirProject="$mntLocal/projects" # /sequencing/projects
-dirZips="/sequencing/zips"
