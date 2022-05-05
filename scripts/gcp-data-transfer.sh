@@ -87,25 +87,6 @@ fi
 # -I list of files to copy (can include globbing(
 # -m parallel transfer
 
-# maybe loop and check exit status per transfer instead... can use wildcards in names then rather than relying on file with paths
-
-#	if [[ -f $filepath ]] && [[ $filepath == *.txt ]]; then#
-#	echo "Source is a text file!"
-#	cat $filepath | gsutil -m cp -I gs://${bucketname}
-
-#        elif [[ -f $filepath ]]; then
-#        echo "Source is a single file!"
-#        gsutil cp $filepath gs://${bucketname}
-
-#	elif [[ -d $filepath ]]; then
-#	echo "Source is a directory!"
-#	gsutil -m cp -r $filepath gs://${bucketname}
-
-#	else
-#	echo "Path does not exist... exiting"
-#	exit 1
-#fi
-
 case "$source" in
 
         # source is directory
@@ -138,7 +119,7 @@ case "$source" in
 	fi
 	;;
 	
-	# if anyother characters used exit
+	# exit 
 	" " | *)
 	echo 'Source param not recognised (must be 'd', 'f' or 't'). Exiting...'
 	exit
