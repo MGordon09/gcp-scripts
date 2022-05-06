@@ -18,7 +18,7 @@
         },
         "condition": {
           "age": 1095,
-          "matchesStorageClass": ["NEARLINE"]
+          "matchesStorageClass": ["COLDLINE"]
         }
       }
     ]
