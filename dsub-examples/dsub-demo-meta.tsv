@@ -1,0 +1,4 @@
+]--input R1	--input R2	--input-recursive M3DB	--output PROFILE	--output BT2_OUT
+gs://xxxxxx-input/ERR3451456_short_R1_w_trim.fastq.gz	gs://xxxxx-input/ERR3451456_short_R2_w_trim.fastq.gz	gs://xxxxxx-metagenomics-references/metaphlan_dbs	gs://xxxxxx-output/ERR3451456_profile.txt	gs://xxxxxx-output/ERR3451570.bt2out
+gs://xxxxxx-input/ERR3451570_short_R1_w_trim.fastq.gz	gs://xxxxx-input/ERR3451570_short_R2_w_trim.fastq.gz	gs://xxxxxx-metagenomics-references/metaphlan_dbs	gs://xxxxxx-output/ERR3451570_profile.txt	gs://xxxxxx-output/ERR3451570.bt2out
+gs://xxxxxx-input/ERR3645029_short_R1_w_trim.fastq.gz	gs://xxxxx-input/ERR3645029_short_R2_w_trim.fastq.gz	gs://xxxxxx-metagenomics-references/metaphlan_dbs	gs://xxxxxx-output/ERR3645029_profile.txt	gs://xxxxxx-output/ERR3645029.bt2out
