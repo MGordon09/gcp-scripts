@@ -1,0 +1,4 @@
+--input RAW1	--input RAW2	--output TRIM1	--output TRIM2
+gs://xxxxxx-input/ERR3451456_short_R1.fastq.gz	gs://xxxxxx-input/ERR3451456_short_R2.fastq.gz	gs://xxxxxx-output/ERR3451456_short_R1_w_trim.fastq.gz	gs://xxxxxx-output/ERR3451456_short_R2_w_trim.fastq.gz
+gs://xxxxxx-input/ERR3451570_short_R1.fastq.gz	gs://xxxxxx-input/ERR3451570_short_R2.fastq.gz	gs://xxxxxx-output/ERR3451570_short_R1_w_trim.fastq.gz	gs://xxxxxx-output/ERR3451570_short_R2_w_trim.fastq.gz
+gs://xxxxxx-input/ERR3645029_short_R1.fastq.gz	gs://xxxxxx-input/ERR3645029_short_R2.fastq.gz	gs://xxxxxx-output/ERR3645029_short_R1_w_trim.fastq.gz	gs://xxxxxx-output/ERR3645029_short_R2_w_trim.fastq.gz
