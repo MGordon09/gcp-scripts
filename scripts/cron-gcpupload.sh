@@ -72,8 +72,10 @@ if ls $fastqOutput/*.fastq.gz 1> /dev/null 2>&1; then # check for fastq files an
     # TODO add path for NS2000)
     if [[ $type == M ]]; then
 	cutfield='9'
-    else
+    elif [[ $type == N ]]; then
 	cutfield='7'
+    else 
+	cutfield='10'
     fi
     projects=`find $fastqOutput -name "*.fastq.gz" | cut -f$cutfield -d'/' | cut -b1-3 | grep -v [a-z] | sort -u`
 else

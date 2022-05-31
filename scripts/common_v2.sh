@@ -41,21 +41,21 @@ case "$type" in #type var must be one of M,N,N2,O
 
 # MiSeq
   "M")
-    recipients="Martin.Gordon@nibsc.org"
+    recipients="Martin.Gordon@nibsc.org,Ryan.Mate@nibsc.org"
     longName="miseq"
-    mntSeq="/sequencer/miseq" #where seq is mounted?
+    mntSeq="/sequencer/miseq" #mount location
     dirSeq="$mntSeq/MiSeqOutput/"   ### trailing /
     mntLocal="/sequencing"
     dirLocal="$mntLocal/miseq" # where seq output is stored on HPC
     dirOutput="$dirLocal/output"
-    fastqOutput=$dirOutput/${seqdate}_*/Data/Intensities/BaseCalls #raw fastq location - try seqdate, if not seqDir
+    fastqOutput=$dirOutput/${seqdate}_*/Data/Intensities/BaseCalls #raw fastq location
     fileCompleted="CompletedJobInfo.xml"
   ;;
 # NextSeq
   "N")
-    recipients="Martin.Gordon@nibsc.org"
+    recipients="Martin.Gordon@nibsc.org,Ryan.Mate@nibsc.org"
     longName="nextseq500"
-    mntSeq="/sequencer/nextseq" #where seq is mounted?
+    mntSeq="/sequencer/nextseq" #mount location
     dirSeq="$mntSeq/Output/"   ### trailing /
     mntLocal="/sequencing"
     dirLocal="$mntLocal/nextseq"  # where seq output is stored on HPC
@@ -65,15 +65,15 @@ case "$type" in #type var must be one of M,N,N2,O
   ;;
   # NextSeq 2000; where are the fastq files
   "N2")
-    recipients="Martin.Gordon@nibsc.org"
+    recipients="Martin.Gordon@nibsc.org,Ryan.Mate@nibsc.org"
     longName="nextseq2000"
-    #mntSeq="$mntLocal/nextseq2000" # not sure if this is where it is mounted??
+    mntSeq="/sequencer/nextseq2000" # not sure if this is where it is mounted??
     #dirSeq="$mntSeq/"   needs to be defined  ### trailing /
     mntLocal="/sequencing"
     dirLocal="$mntLocal/nextseq2000"
-    dirOutput="$dirLocal/output" #or data tbd..
-    fastqOutput="$dirOutput/$seqDir" #need to set
-    fileCompleted="CopyComplete.txt" #3 options decided on copycomplete; created by UCS service when allfiles copied to final destinations. See post: https://www.biostars.org/p/400346/
+    dirOutput="$dirLocal/data" #or data tbd..
+    fastqOutput="$dirOutput/${seqdate}_*/Analysis/1/Data/fastq" #raw fastq location, confirm with Ryan Analysis subdir
+    fileCompleted="RunCompletionStatus.xml" #3 options see post: https://www.biostars.org/p/400346/
   ;;
 # NMR
   "O")
