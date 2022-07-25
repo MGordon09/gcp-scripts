@@ -12,7 +12,7 @@
 # ------------------------------------------------------------------------------
 
 if [ "x$1" == "x" -o "x$2" == "x" ]; then #type and seqencing output folder must be set
-  echo "Usage: $0 type seq-output-foldername lifecycle-management-policy ( 'lmp' )" 
+  echo "Usage: $0 type seq-output-foldername lifecycle-management-policy ( 'lmp' ) versioning ('ver')" 
 
   exit
 fi
@@ -107,7 +107,6 @@ for project in $projects; do
     gsutil label ch -l project-id:mhra-shr-dev-ssot -l creation-date:$datelab -l seq-id:$project -l sequencer:$longName -l seq-date:$seqlab gs://${seqdate}-${project}-${longName}
 
     # set lifecycle management policy on bucket if 'lmp' parameter given
-    # TODO implement check to make sure json file is found
     if [[ x$3 == xlmp ]]; then
 		if [[ -f "../docs/nibsc-bucket-lifecycle-policy.json" ]]; then
         		echo
@@ -120,6 +119,24 @@ for project in $projects; do
     else
         echo "Skipping lifecycle management policy"
     fi
+
+    # turn on bucket versioning if 'ver' parameter given
+    if [[ x$3 == xver || x$4 == xver ]]; then
+
+        echo "Enabling object versioning"
+        gsutil versioning set on gs://${seqdate}-${project}-${longName}
+
+    else
+        echo "Skipping object versioning"
+    fi    
+
+
+    # turn on logging for the bucket
+    echo
+    echo "Enabled access logging for gs://${seqdate}-${project}-${longName}"
+    echo
+    gsutil logging set on -b gs://mhra-shr-dev-seqaccesslog gs://${seqdate}-${project}-${longName}    
+    echo "Logging Enabled"
 
 done
 
