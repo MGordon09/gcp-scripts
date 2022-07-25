@@ -3,8 +3,9 @@
 # ------------------------------------------------------------------------------
 # Overview
 # Script to to upload data from HPC to GCP sink project (mhra-shr-dev-ssot)
-# Purpose: For each sequencing project, create new bucket (format: gs://date-prjid-sequencer), set labels & lifecycle management policies, cp data to bucket
-# Input: Type ('M', 'N', or 'N2'), Sequencing Output Folder (eg '200522_M00167_0018_000000000-J3N6L'), Lifecycle Management Policy ('lmp' - optional) and object versioning ('ver' -optional)
+# Purpose: Storage backup - copy entire sequencing project folder from HPC to GCP bucket 
+# Intended to act as backup - Coldline Storage class to control expenses. For active use, please use cron-gcpupload.sh
+# Input: Type ('M', 'N', or 'N2'), Sequencing Output Folder (eg '200522_M00167_0018_000000000-J3N6L') and Lifecycle Management Policy ('lmp' - optional)
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
@@ -42,6 +43,7 @@ export PATH="$PATH:/opt/google-cloud-sdk/bin"
 gcloud config set project mhra-shr-dev-ssot 
 
 # first authenticate service account using the json key (keep secure)
+# TODO move somewhere accessible for other users
 gcloud auth activate-service-account gsutil@mhra-shr-dev-ssot.iam.gserviceaccount.com --key-file=/home/AD/mgordon/.config/gcloud/sa-keys/gsutil-mhra-shr-dev-ssot.json #need to store this somewhere central
 
 # ------------------------------------------------------------------------------
@@ -64,26 +66,6 @@ if [ ! -f $dirOutput/$fullName/$fileCompleted ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# find the list of unique sequencing projects in the run
-# ------------------------------------------------------------------------------
-
-
-if ls $fastqOutput/*.fastq.gz 1> /dev/null 2>&1; then # check for fastq files and silence stderr/stdout
-    # TODO add path for NS2000)
-    if [[ $type == M ]]; then
-	cutfield='9'
-    elif [[ $type == N ]]; then
-	cutfield='7'
-    else 
-	cutfield='10'
-    fi
-    projects=`find $fastqOutput -name "*.fastq.gz" | cut -f$cutfield -d'/' | cut -b1-3 | grep -v [a-z] | sort -u`
-else
-    echo "emailAndExit "No fastq files found in $fullName""
-    exit # leave in until emailandexit working
-fi
-
-# ------------------------------------------------------------------------------
 # Create buckets, set lifecycle management policies (optional)
 #
 # Parameters
@@ -95,24 +77,23 @@ fi
 # ------------------------------------------------------------------------------
 
 
-for project in $projects; do 
-    echo 
-    echo "Creating bucket for sequencing project ${project}..."
-    echo
-    gsutil ls -b gs://${seqdate}-${project}-${longName} || gsutil mb -b "on" -l "europe-west2" -c "Standard" --pap "enforced" -p 'mhra-shr-dev-ssot' gs://${seqdate}-${project}-${longName}
+echo "Creating bucket for sequencing run ${fullName}..."
+echo
+    gsutil ls -b gs://${fullName} || gsutil mb -b "on" -l "europe-west2" -c "Coldline" --pap "enforced" -p 'mhra-shr-dev-ssot' gs://${fullName}
 
     echo
-    echo "Creating labels for bucket gs://${seqdate}-${project}-${longName}"
+    echo "Creating labels for bucket gs://${fullName}..."
     echo
-    gsutil label ch -l project-id:mhra-shr-dev-ssot -l creation-date:$datelab -l seq-id:$project -l sequencer:$longName -l seq-date:$seqlab gs://${seqdate}-${project}-${longName}
+    gsutil label ch -l project-id:mhra-shr-dev-ssot -l creation-date:$datelab -l sequencer:$longName -l seq-date:$seqlab gs://${fullName}
 
     # set lifecycle management policy on bucket if 'lmp' parameter given
+    # convert coldline storage to archive after 3 years
     if [[ x$3 == xlmp ]]; then
-		if [[ -f "../docs/nibsc-bucket-lifecycle-policy.json" ]]; then
+		if [[ -f "../docs/nibsc-bucket-lifecycle-policy-all.json" ]]; then
         		echo
         		echo "Setting Lifecycle Management Policy on bucket"
         		echo
-        		gsutil lifecycle set ../docs/nibsc-bucket-lifecycle-policy.json gs://${seqdate}-${project}-${longName} #set correct path
+        		gsutil lifecycle set ../docs/nibsc-bucket-lifecycle-policy-all.json gs://${fullName} #set correct path
 		else
 			echo "Json file not found. Skipping lifecycle management policy..."
 		fi
@@ -124,7 +105,7 @@ for project in $projects; do
     if [[ x$3 == xver || x$4 == xver ]]; then
 
         echo "Enabling object versioning"
-        gsutil versioning set on gs://${seqdate}-${project}-${longName}
+        gsutil versioning set on gs://${fullName}
 
     else
         echo "Skipping object versioning"
@@ -133,9 +114,9 @@ for project in $projects; do
 
     # turn on logging for the bucket
     echo
-    echo "Enabled access logging for gs://${seqdate}-${project}-${longName}"
+    echo "Enabled access logging for gs://${fullName}"
     echo
-    gsutil logging set on -b gs://mhra-shr-dev-seqaccesslog gs://${seqdate}-${project}-${longName}    
+    gsutil logging set on -b gs://mhra-shr-dev-seqaccesslog gs://${fullName}    
     echo "Logging Enabled"
 
 done
@@ -145,6 +126,7 @@ done
 # Copy fastq files to buckets
 #
 # Parameters
+# -r copy directory and all files
 # -c if error occurs on transfer continue copying remaining files 
 # -L logfile with detailed info on each item copied
 # -m parallel transfer
@@ -152,11 +134,11 @@ done
 
 for project in $projects; do
     echo
-    echo "Copying project $project fastq files to bucket gs://${seqdate}-${project}-${longName}"
+    echo "Copying fastq files to bucket gs://${fullName}"
     echo
     
     # Sanity check & repeat failed uploads. Create logfile on first iteration through loop and repeat individual uploads for any failures in logfile. Ignores repeats for successful uploads in logfile. Loop continues until exit status 0 returned. see : https://cloud.google.com/storage/docs/gsutil/commands/cp
-    until gsutil -m cp -c -L ${seqdate}-${project}-${longName}-gsutil.log $fastqOutput/${project}*.fastq.gz gs://${seqdate}-${project}-${longName}; do
+    until gsutil -m cp -r -c -L ${fullName}-gsutil.log ${fullName} gs://${fullName}; do
 	sleep 10m #rerun cp command after 10 min 
 	echo 'Sample(s) upload failed. Retrying...'
     done 
@@ -165,4 +147,4 @@ done
 wait 
 echo "Data successfully uploaded"
 
-emailAndExit "GCP fastq file uploads completed"
+emailAndExit "Sequencing folder upload completed"
