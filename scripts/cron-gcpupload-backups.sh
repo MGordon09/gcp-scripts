@@ -4,7 +4,7 @@
 # Overview
 # Script to to upload data from HPC to GCP sink project (mhra-shr-dev-ssot)
 # Purpose: Storage backup - copy entire sequencing project folder from HPC to GCP bucket 
-# Intended to act as backup - Coldline Storage class to control expenses. For active use, please use cron-gcpupload.sh
+# Intended as backup solution - Coldline Storage class to control expenses. For active use, please use cron-gcpupload.sh
 # Input: Type ('M', 'N', or 'N2'), Sequencing Output Folder (eg '200522_M00167_0018_000000000-J3N6L') and Lifecycle Management Policy ('lmp' - optional)
 # ------------------------------------------------------------------------------
 
@@ -47,7 +47,7 @@ gcloud config set project mhra-shr-dev-ssot
 gcloud auth activate-service-account gsutil@mhra-shr-dev-ssot.iam.gserviceaccount.com --key-file=/home/AD/mgordon/.config/gcloud/sa-keys/gsutil-mhra-shr-dev-ssot.json #need to store this somewhere central
 
 # ------------------------------------------------------------------------------
-# Checks for sequencer output folders for run complete files & Identify projects
+# Checks for sequencer output folders for run complete files 
 # ------------------------------------------------------------------------------
 
 # seach for fastq files; exit if not found
@@ -79,47 +79,45 @@ fi
 
 echo "Creating bucket for sequencing run ${fullName}..."
 echo
-    gsutil ls -b gs://${fullName} || gsutil mb -b "on" -l "europe-west2" -c "Coldline" --pap "enforced" -p 'mhra-shr-dev-ssot' gs://${fullName}
+gsutil ls -b gs://${fullName} || gsutil mb -b "on" -l "europe-west2" -c "Coldline" --pap "enforced" -p 'mhra-shr-dev-ssot' gs://${fullName}
 
-    echo
-    echo "Creating labels for bucket gs://${fullName}..."
-    echo
-    gsutil label ch -l project-id:mhra-shr-dev-ssot -l creation-date:$datelab -l sequencer:$longName -l seq-date:$seqlab gs://${fullName}
+echo
+echo "Creating labels for bucket gs://${fullName}..."
+echo
+gsutil label ch -l project-id:mhra-shr-dev-ssot -l creation-date:$datelab -l sequencer:$longName -l seq-date:$seqlab gs://${fullName}
 
-    # set lifecycle management policy on bucket if 'lmp' parameter given
-    # convert coldline storage to archive after 3 years
-    if [[ x$3 == xlmp ]]; then
-		if [[ -f "../docs/nibsc-bucket-lifecycle-policy-all.json" ]]; then
-        		echo
-        		echo "Setting Lifecycle Management Policy on bucket"
-        		echo
-        		gsutil lifecycle set ../docs/nibsc-bucket-lifecycle-policy-all.json gs://${fullName} #set correct path
-		else
-			echo "Json file not found. Skipping lifecycle management policy..."
-		fi
-    else
-        echo "Skipping lifecycle management policy"
-    fi
+# set lifecycle management policy on bucket if 'lmp' parameter given
+# convert coldline storage to archive after 3 years
+if [[ x$3 == xlmp ]]; then
+	if [[ -f "../docs/nibsc-bucket-lifecycle-policy-all.json" ]]; then
+        	echo
+        	echo "Setting Lifecycle Management Policy on bucket"
+        	echo
+        	gsutil lifecycle set ../docs/nibsc-bucket-lifecycle-policy-backup.json gs://${fullName} #set correct path
+	else
+		echo "Json file not found. Skipping lifecycle management policy..."
+	fi
+else
+    echo "Skipping lifecycle management policy"
+fi
 
-    # turn on bucket versioning if 'ver' parameter given
-    if [[ x$3 == xver || x$4 == xver ]]; then
+# turn on bucket versioning if 'ver' parameter given
+if [[ x$3 == xver || x$4 == xver ]]; then
 
-        echo "Enabling object versioning"
-        gsutil versioning set on gs://${fullName}
+    echo "Enabling object versioning"
+    gsutil versioning set on gs://${fullName}
 
-    else
-        echo "Skipping object versioning"
-    fi    
+else
+    echo "Skipping object versioning"
+fi    
 
 
-    # turn on logging for the bucket
-    echo
-    echo "Enabled access logging for gs://${fullName}"
-    echo
-    gsutil logging set on -b gs://mhra-shr-dev-seqaccesslog gs://${fullName}    
-    echo "Logging Enabled"
-
-done
+# turn on logging for the bucket
+echo
+echo "Enabled access logging for gs://${fullName}"
+echo
+gsutil logging set on -b gs://mhra-shr-dev-seqaccesslog gs://${fullName}    
+echo "Logging Enabled"
 
 
 # ------------------------------------------------------------------------------
@@ -132,19 +130,20 @@ done
 # -m parallel transfer
 # ------------------------------------------------------------------------------
 
-for project in $projects; do
-    echo
-    echo "Copying fastq files to bucket gs://${fullName}"
-    echo
+echo
+echo "Copying fastq files to bucket gs://${fullName}"
+echo
     
-    # Sanity check & repeat failed uploads. Create logfile on first iteration through loop and repeat individual uploads for any failures in logfile. Ignores repeats for successful uploads in logfile. Loop continues until exit status 0 returned. see : https://cloud.google.com/storage/docs/gsutil/commands/cp
-    until gsutil -m cp -r -c -L ${fullName}-gsutil.log ${fullName} gs://${fullName}; do
-	sleep 10m #rerun cp command after 10 min 
-	echo 'Sample(s) upload failed. Retrying...'
-    done 
-done
+# Check & repeat failed uploads. Create logfile on first iteration through loop and repeat individual uploads for any failures in logfile. Ignores repeats for successful uploads in logfile. Loop continues until exit status 0 returned. see : https://cloud.google.com/storage/docs/gsutil/commands/cp
+until gsutil -m cp -r -c -L ${fullName}-gsutil.log ${fullName} gs://${fullName}; do
+sleep 10m #rerun cp command after 10 min if exit code !=0
+echo 'Sample(s) upload failed. Retrying...'
+done 
+
+# upload the log file to the bucket
+gsutil cp ${fullName}-gsutil.log gs://${fullName}
 
 wait 
 echo "Data successfully uploaded"
 
-emailAndExit "Sequencing folder upload completed"
+emailAndExit "Sequencing folder uploaded!"

@@ -69,15 +69,15 @@ fi
 
 
 if ls $fastqOutput/*.fastq.gz 1> /dev/null 2>&1; then # check for fastq files and silence stderr/stdout
-    # TODO add path for NS2000)
+
     if [[ $type == M ]]; then
 	cutfield='9'
     elif [[ $type == N ]]; then
 	cutfield='7'
     else 
-	cutfield='10'
+	cutfield='10' #confirm for N2
     fi
-    projects=`find $fastqOutput -name "*.fastq.gz" | cut -f$cutfield -d'/' | cut -b1-3 | grep -v [a-z] | sort -u`
+    projects=$(find $fastqOutput -name "*.fastq.gz" | cut -f$cutfield -d'/' | cut -b1-3 | grep -v [a-z] | sort -u)
 else
     echo "emailAndExit "No fastq files found in $fullName""
     exit # leave in until emailandexit working
@@ -160,6 +160,8 @@ for project in $projects; do
 	sleep 10m #rerun cp command after 10 min 
 	echo 'Sample(s) upload failed. Retrying...'
     done 
+
+    gsutil cp ${seqdate}-${project}-${longName}-gsutil.log gs://${seqdate}-${project}-${longName}
 done
 
 wait 
