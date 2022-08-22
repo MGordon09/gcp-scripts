@@ -42,7 +42,7 @@ export PATH="$PATH:/opt/google-cloud-sdk/bin"
 gcloud config set project mhra-shr-dev-ssot 
 
 # first authenticate service account using the json key (keep secure)
-gcloud auth activate-service-account gsutil@mhra-shr-dev-ssot.iam.gserviceaccount.com --key-file=/usr/share/sequencing/.gcp_sa_keys/gsutil-mhra-shr-dev-ssot.json #need to store this somewhere central
+gcloud auth activate-service-account gsutil@mhra-shr-dev-ssot.iam.gserviceaccount.com --key-file=/sequencing/.gcp_sa_keys/gsutil-mhra-shr-dev-ssot.json #need to store this somewhere central
 
 # ------------------------------------------------------------------------------
 # Checks for sequencer output folders for run complete files & Identify projects
